@@ -1,6 +1,6 @@
 # DYALF
 
-Droids You Are Looking For - A Node.js Library to interact with Sphero droids 🤖
+Droids You Are Looking For - A Node.js Library to interact with [Sphero](https://www.sphero.com/starwars?utm_source=rss&utm_medium=rss) droids 🤖
 
 ## Install
 
@@ -26,3 +26,6 @@ var main = async () => {
 main();
 ```
 
+## License
+
+MIT - Copyright (c) Andrea Stagi
