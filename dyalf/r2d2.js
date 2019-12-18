@@ -107,7 +107,7 @@ class R2D2 extends Droid {
             };
             characteristic.removeAllListeners('data');
             characteristic.on('data', listenerF);
-            characteristic.write(new Buffer(buff), true, (error) => {
+            characteristic.write(Buffer.from(buff), true, (error) => {
             });
 
         });
@@ -130,7 +130,7 @@ class R2D2 extends Droid {
                     peripheral.discoverServices([CONNECT_SERVICE], (error, services) => {
                         services[0].discoverCharacteristics([CONNECT_CHAR], (error, characteristics) => {
                             this._connectChar = characteristics[0];
-                            this._connectChar.write(new Buffer(MSG_CONNECTION), true, (error) => {
+                            this._connectChar.write(Buffer.from(MSG_CONNECTION), true, (error) => {
                                 peripheral.discoverServices([SPECIAL_SERVICE], (error, services) => {
                                     services[0].discoverCharacteristics([SPECIAL_CHAR], (error, characteristics) => {
                                         this._specialChar = characteristics[0];
@@ -179,14 +179,6 @@ class R2D2 extends Droid {
         return this._writePacket(
             this._specialChar,
             this._buildPacket(MSG_ROTATE, this._convertDegreeToHex(degree)),
-            //this._buildPacket(MSG_ROTATE, [0xc2,0xb4,0x00,0x00]), //-90
-            //this._buildPacket(MSG_ROTATE, [0xc2,0xf0,0x00,0x00]), //- 120
-            //this._buildPacket(MSG_ROTATE, [0xc3,0x20,0x00,0x00]), //-160
-            // this._buildPacket(MSG_ROTATE, [0xc3,0x2a,0x00,0x00]), //-170 ERRORE
-            //this._buildPacket(MSG_ROTATE, [0x41,0xa0,0x00,0x00]), //20
-            //this._buildPacket(MSG_ROTATE, [0x42,0xb2,0x00,0x00]), //89
-            //this._buildPacket(MSG_ROTATE, [0x43,0x34,0x00,0x00]), //180
-            //this._buildPacket(MSG_ROTATE, [0x43,0x35,0x00,0x00]), //181 ERRORE
             false,
         );
     }

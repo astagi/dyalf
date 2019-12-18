@@ -1,10 +1,6 @@
-# DYALF
+# Free R2D2
 
-Droids You Are Looking For - A Node.js Library to interact with [Sphero](https://www.sphero.com/starwars?utm_source=rss&utm_medium=rss) droids 🤖
-
-## Install
-
-TODO
+A Node.js Library to interact with [Sphero](https://www.sphero.com/starwars?utm_source=rss&utm_medium=rss) R2D2 droid 🤖
 
 ## Usage
 
@@ -12,7 +8,7 @@ TODO
 const dyalf = require('./dyalf');
 
 
-let r2 = new dyalf.R2D2();
+let r2 = new dyalf.R2D2('d7:1b:52:17:7b:d6');
 
 let main = async () => {
     await r2.connect();
