@@ -4,9 +4,9 @@
 const dyalf = require('./dyalf');
 
 
-var r2 = new dyalf.R2D2();
+let r2 = new dyalf.R2D2('d7:1b:52:17:7b:d6');
 
-var main = async () => {
+let main = async () => {
     await r2.connect();
     //await bb8.connect();
     //await r2.beep();
@@ -25,13 +25,23 @@ var main = async () => {
 
 
 
-    await r2.animate(7); // SET OF 24 animations | Values between 1-24 try:22
+    //await r2.animate(70); // SET OF 24 animations | Values between 1-24 try:22
 
     await r2.openCarriage();
+
+    await r2.animate(7);
+
+    for (var i = -160 ; i < 180 ; i++) {
+        await r2.rotateTop(i);
+    }
 
     await r2.closeCarriage();
 
-    await r2.openCarriage();
+    // await r2.openCarriage();
+
+    // await r2.closeCarriage();
+
+    // await r2.openCarriage();
 
     //GIU
     //await r2.mess([0x0A, 0x17, 0x0D], [0x01]);
@@ -64,7 +74,6 @@ var main = async () => {
 
     //await r2.beep();
     await r2.off();
-    console.log('FINISH ALL');
 };
 
 

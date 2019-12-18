@@ -12,9 +12,9 @@ TODO
 const dyalf = require('./dyalf');
 
 
-var r2 = new dyalf.R2D2();
+let r2 = new dyalf.R2D2();
 
-var main = async () => {
+let main = async () => {
     await r2.connect();
     await r2.animate(7);
     await r2.openCarriage();
