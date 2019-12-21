@@ -10,15 +10,14 @@ const SPECIAL_CHAR = "00010002574f4f2053706865726f2121";
 
 const MSG_CONNECTION = [0x75,0x73,0x65,0x74,0x68,0x65,0x66,0x6F,0x72,0x63,0x65,0x2E,0x2E,0x2E,0x62,0x61,0x6E,0x64];
 const MSG_INIT = [0x0A,0x13,0x0D];
-const MSG_ROTATE = [0x0A,0x17,0x0F]; //0x42,0xB4,0x00,0x00 //0x00,0x00,0x00,0x00
+const MSG_ROTATE = [0x0A,0x17,0x0F];
 const MSG_ANIMATION = [0x0A,0x17,0x05];
 const MSG_CARRIAGE = [0x0A, 0x17, 0x0D];
 const MSG_OFF = [0x0A,0x13,0x01];
 
-
-const ESC = 0xAB; // 171
-const SOP = 0x8D; // 141
-const EOP = 0xD8; // 216
+const ESC = 0xAB;
+const SOP = 0x8D;
+const EOP = 0xD8;
 const ESC_ESC = 0x23;
 const ESC_SOP = 0x05;
 const ESC_EOP = 0x50;
@@ -71,11 +70,16 @@ class R2D2 extends Droid {
         return new Promise(function(resolve, reject) {
             let dataRead = [];
 
-            let isAValidRequest = (dataRead) => {
+            let checkIsAValidRequest = (dataRead) => {
                 if (dataRead[5] != 0x00) {
-                    return dataRead[5];
+                    reject(dataRead[5]);
                 }
-                return 0x00;
+            }
+
+            let finish = () => {
+                setTimeout(() => {
+                    resolve(true);
+                }, timeout);
             }
 
             let listenerF = (data, isNotification) => {
@@ -84,32 +88,20 @@ class R2D2 extends Droid {
                     // Check Package and Wait
                     if (waitForNotification) {
                         if (dataRead[1] % 2 == 0) {
-                            setTimeout(() => {
-                                resolve(true);
-                            }, timeout);
+                            finish();
                         } else {
-                            let errorCode = isAValidRequest(dataRead);
-                            if (errorCode != 0x00) {
-                                reject(errorCode);
-                            }
+                            checkIsAValidRequest(dataRead);
                         }
                     } else {
-                        let errorCode = isAValidRequest(dataRead);
-                        if (errorCode != 0x00) {
-                            reject(errorCode);
-                        }
-                        setTimeout(() => {
-                            resolve(true);
-                        }, timeout);
+                        checkIsAValidRequest(dataRead);
+                        finish();
                     }
                     dataRead = [];
                 }
             };
             characteristic.removeAllListeners('data');
             characteristic.on('data', listenerF);
-            characteristic.write(Buffer.from(buff), true, (error) => {
-            });
-
+            characteristic.write(Buffer.from(buff));
         });
     }
 

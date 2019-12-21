@@ -1,4 +1,4 @@
-let calculateChk = function(buff) {
+let calculateChk = (buff) => {
     let ret = 0x00;
     for (let i = 0 ; i < buff.length ; i++) {
 		ret += buff[i];
