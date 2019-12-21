@@ -1,6 +1,6 @@
-# Free R2D2
+# Dyalf
 
-A Node.js Library to interact with [Sphero](https://www.sphero.com/starwars?utm_source=rss&utm_medium=rss) R2D2 droid 🤖
+A Node.js Library to interact with Star Wars [Sphero](https://www.sphero.com/starwars?utm_source=rss&utm_medium=rss) droids 🤖
 
 ## Usage
 
