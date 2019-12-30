@@ -12,6 +12,32 @@ node blescanner.js
 
 included in this library.
 
+## Usage
+
+```js
+const dyalf = require('./dyalf');
+
+
+let r2 = new dyalf.R2D2('4bef2b0786334e2fac126c55f7f2d057');
+
+
+let main = async () => {
+    await r2.connect();
+    await r2.openCarriage();
+    await r2.closeCarriage();
+    await r2.sleep(1000);
+    await r2.animate(7);
+    for (var i = -160; i < 180; i += 5) {
+        await r2.rotateTop(i);
+    }
+    await r2.sleep(1000);
+    await r2.off();
+    dyalf.shutdown();
+};
+
+main();
+```
+
 ## Troubleshooting
 
 #### MacOS won't connect to the droid
@@ -35,32 +61,6 @@ blueutil off
 rm -v ~/Library/Preferences/ByHost/com.apple.Bluetooth.*.plist
 sudo rm /Library/Preferences/com.apple.Bluetooth.plist
 blueutil on
-```
-
-## Usage
-
-```js
-const dyalf = require('./dyalf');
-
-
-let r2 = new dyalf.R2D2('d7:1b:52:17:7b:d6');
-
-
-let main = async () => {
-    await r2.connect();
-    await r2.openCarriage();
-    await r2.closeCarriage();
-    await r2.sleep(1000);
-    await r2.animate(7);
-    for (var i = -160; i < 180; i += 5) {
-        await r2.rotateTop(i);
-    }
-    await r2.sleep(1000);
-    await r2.off();
-    dyalf.shutdown();
-};
-
-main();
 ```
 
 ## License
