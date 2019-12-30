@@ -8,12 +8,12 @@ const CONNECT_CHAR = "00020005574f4f2053706865726f2121";
 const SPECIAL_SERVICE = "00010001574f4f2053706865726f2121";
 const SPECIAL_CHAR = "00010002574f4f2053706865726f2121";
 
-const MSG_CONNECTION = [0x75,0x73,0x65,0x74,0x68,0x65,0x66,0x6F,0x72,0x63,0x65,0x2E,0x2E,0x2E,0x62,0x61,0x6E,0x64];
-const MSG_INIT = [0x0A,0x13,0x0D];
-const MSG_ROTATE = [0x0A,0x17,0x0F];
-const MSG_ANIMATION = [0x0A,0x17,0x05];
+const MSG_CONNECTION = [0x75, 0x73, 0x65, 0x74, 0x68, 0x65, 0x66, 0x6F, 0x72, 0x63, 0x65, 0x2E, 0x2E, 0x2E, 0x62, 0x61, 0x6E, 0x64];
+const MSG_INIT = [0x0A, 0x13, 0x0D];
+const MSG_ROTATE = [0x0A, 0x17, 0x0F];
+const MSG_ANIMATION = [0x0A, 0x17, 0x05];
 const MSG_CARRIAGE = [0x0A, 0x17, 0x0D];
-const MSG_OFF = [0x0A,0x13,0x01];
+const MSG_OFF = [0x0A, 0x13, 0x01];
 
 const ESC = 0xAB;
 const SOP = 0x8D;
@@ -25,30 +25,27 @@ const ESC_EOP = 0x50;
 
 class R2D2 extends Droid {
 
-    constructor (address=null) {
+    constructor(address = null) {
         super(address);
     }
 
     _encodePacketBody(payload) {
         let packetEncoded = [];
-        for (let i = 0 ; i < payload.length ; i++) {
+        for (let i = 0; i < payload.length; i++) {
             if (payload[i] == ESC) {
                 packetEncoded.push(...[ESC, ESC_ESC]);
-            }
-            else if (payload[i] == SOP) {
+            } else if (payload[i] == SOP) {
                 packetEncoded.push(...[ESC, ESC_SOP]);
-            }
-            else if (payload[i] == EOP) {
+            } else if (payload[i] == EOP) {
                 packetEncoded.push(...[ESC, ESC_EOP]);
-            }
-            else {
+            } else {
                 packetEncoded.push(payload[i])
             }
         }
         return packetEncoded;
     }
 
-    _buildPacket(init, payload=[]) {
+    _buildPacket(init, payload = []) {
         let packet = [SOP];
         let body = [];
 
@@ -66,47 +63,57 @@ class R2D2 extends Droid {
         return packet;
     }
 
-    _writePacket(characteristic, buff, waitForNotification=false, timeout=0) {
-        return new Promise(function(resolve, reject) {
+    _writePacket(characteristic, buff, waitForNotification = false, timeout = 0) {
+        return new Promise(function (resolve, reject) {
             let dataRead = [];
+            let dataToCheck = [];
+            let eopPosition = -1;
 
             let checkIsAValidRequest = (dataRead) => {
                 if (dataRead[5] != 0x00) {
+                    characteristic.removeListener('data', listenerForRead);
                     reject(dataRead[5]);
                 }
             }
 
             let finish = () => {
+                dataRead = [];
                 setTimeout(() => {
+                    characteristic.removeListener('data', listenerForRead);
                     resolve(true);
                 }, timeout);
             }
 
-            let listenerF = (data, isNotification) => {
+            let listenerForRead = (data, isNotification) => {
                 dataRead.push(...data)
-                if (data[data.length - 1] === EOP) {
-                    // Check Package and Wait
-                    if (waitForNotification) {
-                        if (dataRead[1] % 2 == 0) {
-                            finish();
-                        } else {
-                            checkIsAValidRequest(dataRead);
-                        }
-                    } else {
-                        checkIsAValidRequest(dataRead);
-                        finish();
-                    }
+                eopPosition = dataRead.indexOf(EOP);
+                dataToCheck = dataRead.slice(0);
+                if (eopPosition !== dataRead.length - 1) {
+                    dataRead = dataRead.slice(eopPosition + 1);
+                } else {
                     dataRead = [];
                 }
+                if (eopPosition !== -1) {
+                    // Check Package and Wait
+                    if (waitForNotification) {
+                        if (dataToCheck[1] % 2 == 0) {
+                            finish();
+                        } else {
+                            checkIsAValidRequest(dataToCheck);
+                        }
+                    } else {
+                        checkIsAValidRequest(dataToCheck);
+                        finish();
+                    }
+                }
             };
-            characteristic.removeAllListeners('data');
-            characteristic.on('data', listenerF);
+            characteristic.on('data', listenerForRead);
             characteristic.write(Buffer.from(buff));
         });
     }
 
     // Used only for debug
-    _general_mess(data, params=[], wait=false, timeout=0) {
+    _general_mess(data, params = [], wait = false, timeout = 0) {
         return this._writePacket(
             this._specialChar,
             this._buildPacket(data, params),
@@ -118,7 +125,7 @@ class R2D2 extends Droid {
     connect() {
         return new Promise((resolve, reject) => {
             this._findPeripheral().then((peripheral) => {
-                peripheral.connect( (e) => {
+                peripheral.connect((e) => {
                     peripheral.discoverServices([CONNECT_SERVICE], (error, services) => {
                         services[0].discoverCharacteristics([CONNECT_CHAR], (error, characteristics) => {
                             this._connectChar = characteristics[0];
@@ -138,7 +145,7 @@ class R2D2 extends Droid {
                                             5000
                                         ).then(() => {
                                             resolve(true);
-                                        })
+                                        }).catch(err => console.log(err))
                                     });
                                 });
                             });
@@ -162,7 +169,9 @@ class R2D2 extends Droid {
         var view = new DataView(new ArrayBuffer(4));
         view.setFloat32(0, degree);
         return Array
-            .apply(null, { length: 4 })
+            .apply(null, {
+                length: 4
+            })
             .map((_, i) => view.getUint8(i))
 
     }

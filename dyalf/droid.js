@@ -4,10 +4,14 @@ const noble = require('noble');
 
 class Droid {
 
-    constructor (address=null) {
+    constructor(address = null) {
         this._address = address;
         this._seq = 0x00;
         this._foundPeripheral = false;
+    }
+
+    sleep(ms) {
+        return new Promise(a => setTimeout(a, ms));
     }
 
     _findPeripheral() {
