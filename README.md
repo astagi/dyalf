@@ -6,12 +6,36 @@ A Node.js Library to interact with Star Wars [Sphero](https://www.sphero.com/sta
 
 To pair droids with your device for the first time, you need an external tool to find UUID. I use
 
-```bash
+```sh
 node blescanner.js
-
 ```
 
 included in this library.
+
+## Troubleshooting
+
+#### MacOS won't connect to the droid
+
+Restart your Mac is an option, alteratively
+
+- Turn off Bluetooth
+- Run the following code in your shell
+
+```sh
+rm -v ~/Library/Preferences/ByHost/com.apple.Bluetooth.*.plist
+sudo rm /Library/Preferences/com.apple.Bluetooth.plist
+```
+
+- Turn Bluetooth back on
+
+You can automate this procedure using [blueutil](http://www.frederikseiffert.de/blueutil/):
+
+```sh
+blueutil off
+rm -v ~/Library/Preferences/ByHost/com.apple.Bluetooth.*.plist
+sudo rm /Library/Preferences/com.apple.Bluetooth.plist
+blueutil on
+```
 
 ## Usage
 
