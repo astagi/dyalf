@@ -4,8 +4,8 @@ const noble = require('noble');
 
 class Droid {
 
-    constructor(address = null) {
-        this._address = address;
+    constructor(uuid = null) {
+        this._uuid = uuid;
         this._seq = 0x00;
         this._foundPeripheral = false;
     }
@@ -16,25 +16,22 @@ class Droid {
 
     _findPeripheral() {
         console.log("Searching for " + this.constructor.name + " droid...");
-        if (this._address) {
-            console.log("Looking for a specific address " + this._address)
+        if (this._uuid) {
+            console.log("Looking for a specific UUID " + this._uuid)
         }
 
         return new Promise((resolve, reject) => {
             noble.on('discover', (peripheral) => {
-                if (peripheral.address === this._address && !this._foundPeripheral) {
-                    this._foundPeripheral = true;
-                    resolve(peripheral);
+                if (!this._foundPeripheral) {
+                    if (peripheral.uuid === this._uuid) {
+                        this._foundPeripheral = true;
+                        noble.stopScanning();
+                        resolve(peripheral);
+                    }
                 }
             });
 
-            noble.on('stateChange', (state) => {
-                if (state === 'poweredOn') {
-                    noble.startScanning();
-                } else {
-                    noble.stopScanning();
-                }
-            });
+            noble.startScanning();
         });
 
     }

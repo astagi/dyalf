@@ -2,6 +2,17 @@
 
 A Node.js Library to interact with Star Wars [Sphero](https://www.sphero.com/starwars?utm_source=rss&utm_medium=rss) droids 🤖
 
+## Pair droids with your device
+
+To pair droids with your device for the first time, you need an external tool to find UUID. I use
+
+```bash
+node blescanner.js
+
+```
+
+included in this library.
+
 ## Usage
 
 ```js

@@ -64,7 +64,7 @@ class R2D2 extends Droid {
     }
 
     _writePacket(characteristic, buff, waitForNotification = false, timeout = 0) {
-        return new Promise(function (resolve, reject) {
+        return new Promise((resolve, reject) => {
             let dataRead = [];
             let dataToCheck = [];
             let eopPosition = -1;
@@ -125,7 +125,7 @@ class R2D2 extends Droid {
     connect() {
         return new Promise((resolve, reject) => {
             this._findPeripheral().then((peripheral) => {
-                peripheral.connect((e) => {
+                peripheral.connect((error) => {
                     peripheral.discoverServices([CONNECT_SERVICE], (error, services) => {
                         services[0].discoverCharacteristics([CONNECT_CHAR], (error, characteristics) => {
                             this._connectChar = characteristics[0];
