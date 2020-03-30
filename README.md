@@ -42,7 +42,7 @@ main();
 
 #### MacOS won't connect to the droid
 
-Restart your Mac is an option, alteratively
+Restart your Mac is a valid option! Alternatively:
 
 - Turn off Bluetooth
 - Run the following code in your shell
