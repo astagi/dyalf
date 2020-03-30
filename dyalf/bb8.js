@@ -19,59 +19,59 @@ const MSG_INIT_WKUPCPU = [0x01];
 
 class BB8 extends Droid {
 
-    constructor(address = null) {
-        super(address);
-    }
+  constructor(address = null) {
+    super(address);
+  }
 
-    _writePacket(characteristic, buff, timeout = 0) {
-        return new Promise((resolve, reject) => {
-            characteristic.write(Buffer.from(buff), false, (error) => {
-                if (!error) {
-                    resolve(true);
-                } else {
-                    reject(error);
-                }
-            });
-        });
-    }
+  _writePacket(characteristic, buff, timeout = 0) {
+    return new Promise((resolve, reject) => {
+      characteristic.write(Buffer.from(buff), false, (error) => {
+        if (!error) {
+          resolve(true);
+        } else {
+          reject(error);
+        }
+      });
+    });
+  }
 
-    connect() {
-        return new Promise((resolve, reject) => {
-            this._findPeripheral().then((peripheral) => {
-                this._peripheral = peripheral;
-                peripheral.connect((error) => {
-                    peripheral.discoverServices([CONNECT_SERVICE], (error, services) => {
-                        services[0].discoverCharacteristics([ANTIDOS_CHAR], (error, characteristics) => {
-                            this._antidosChar = characteristics[0];
-                            services[0].discoverCharacteristics([WKUPCPU_CHAR], (error, characteristics) => {
-                                this._wkupChar = characteristics[0];
-                                services[0].discoverCharacteristics([TXPW_CHAR], (error, characteristics) => {
-                                    this._txpwChar = characteristics[0];
-                                    this._writePacket(
-                                        this._antidosChar,
-                                        MSG_INIT_ANTIDOS,
-                                    ).then(this._writePacket(
-                                        this._txpwChar,
-                                        MSG_INIT_TXPW,
-                                    )).then(this._writePacket(
-                                        this._wkupChar,
-                                        MSG_INIT_WKUPCPU,
-                                    )).then(resolve(true));
-                                });
-                            });
-                        });
-                    });
+  connect() {
+    return new Promise((resolve, reject) => {
+      this._findPeripheral().then((peripheral) => {
+        this._peripheral = peripheral;
+        peripheral.connect((error) => {
+          peripheral.discoverServices([CONNECT_SERVICE], (error, services) => {
+            services[0].discoverCharacteristics([ANTIDOS_CHAR], (error, characteristics) => {
+              this._antidosChar = characteristics[0];
+              services[0].discoverCharacteristics([WKUPCPU_CHAR], (error, characteristics) => {
+                this._wkupChar = characteristics[0];
+                services[0].discoverCharacteristics([TXPW_CHAR], (error, characteristics) => {
+                  this._txpwChar = characteristics[0];
+                  this._writePacket(
+                    this._antidosChar,
+                    MSG_INIT_ANTIDOS,
+                  ).then(this._writePacket(
+                    this._txpwChar,
+                    MSG_INIT_TXPW,
+                  )).then(this._writePacket(
+                    this._wkupChar,
+                    MSG_INIT_WKUPCPU,
+                  )).then(resolve(true));
                 });
+              });
             });
+          });
         });
-    }
+      });
+    });
+  }
 
-    off() {
-        return new Promise((resolve, reject) => {
-            this._peripheral.disconnect();
-            resolve(true);
-        });
-    }
+  off() {
+    return new Promise((resolve, reject) => {
+      this._peripheral.disconnect();
+      resolve(true);
+    });
+  }
 };
 
 
