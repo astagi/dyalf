@@ -19,7 +19,7 @@ let main = async () => {
 
   console.log('🔳 Make a square');
   for (let i = 0; i < 4; i++) {
-    await r2.move(0xFF, i * 90, 3000);
+    await r2.move(0xFF, i * 90, 1000);
   }
 
   await r2.stop();

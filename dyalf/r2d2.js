@@ -300,6 +300,7 @@ class R2D2 extends Droid {
   }
 
   off() {
+    this._specialChar.removeAllListeners();
     return this._writePacket(
       this._specialChar,
       this._buildPacket(MSG_OFF),
