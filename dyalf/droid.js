@@ -1,16 +1,18 @@
 "use strict";
 const noble = require('noble');
+const EventEmitter = require('events');
 
 
-class Droid {
+class Droid extends EventEmitter {
 
   constructor(uuid = null) {
+    super()
     this._uuid = uuid;
     this._seq = 0x00;
     this._foundPeripheral = false;
   }
 
-  sleep(ms) {
+  wait(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 

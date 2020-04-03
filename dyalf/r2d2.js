@@ -15,7 +15,7 @@ const MSG_ANIMATION = [0x0A, 0x17, 0x05];
 const MSG_CARRIAGE = [0x0A, 0x17, 0x0D];
 const MSG_MOVE = [0x0A, 0x16, 0x07]
 const MSG_OFF = [0x0A, 0x13, 0x01];
-
+const MSG_ACCELEROMETER = [0x0A, 0x18, 0x00];
 
 const ESC = 0xAB;
 const SOP = 0x8D;
@@ -29,10 +29,12 @@ const CONVERSIONS = {
   FLOAT: 'f',
 }
 
+
 class R2D2 extends Droid {
 
   constructor(address = null) {
     super(address);
+    this._heading = 0;
   }
 
   _encodePacketBody(payload) {
@@ -51,6 +53,16 @@ class R2D2 extends Droid {
     return packetEncoded;
   }
 
+  _convertDegreesToHex(degree, format = CONVERSIONS.INTEGER) {
+    var view = new DataView(new ArrayBuffer(4));
+    format === CONVERSIONS.FLOAT ? view.setFloat32(0, degree) : view.setUint16(0, degree)
+    return Array
+      .apply(null, {
+        length: format === CONVERSIONS.FLOAT ? 4 : 2
+      })
+      .map((_, i) => view.getUint8(i))
+  }
+
   _buildPacket(init, payload = []) {
     let packet = [SOP];
     let body = [];
@@ -67,6 +79,52 @@ class R2D2 extends Droid {
     this._seq = (this._seq + 1) % 140;
 
     return packet;
+  }
+
+  _enableAccelerometerInspection(characteristic) {
+    let dataRead = [];
+    let dataToCheck = [];
+    let eopPosition = -1;
+    characteristic.write(
+      Buffer.from(
+        this._buildPacket(MSG_ACCELEROMETER, [0x00, 0x96, 0x00, 0x00, 0x07, 0xe0, 0x78])
+      )
+    );
+    characteristic.on('data', (data) => {
+      dataRead.push(...data);
+      eopPosition = dataRead.indexOf(EOP);
+      dataToCheck = dataRead.slice(0);
+      if (eopPosition !== dataRead.length - 1) {
+        dataRead = dataRead.slice(eopPosition + 1);
+      } else {
+        dataRead = [];
+      }
+      if (eopPosition !== -1) {
+        if (dataToCheck.slice(0, 5).every((v) => [0x8D, 0x00, 0x18, 0x02, 0xFF].indexOf(v) >= 0)) {
+          // Decode packet
+          let packetDecoded = [];
+          for (let i = 0; i < dataToCheck.length - 1; i++) {
+            if (dataToCheck[i] == ESC && dataToCheck[i + 1] == ESC_ESC) {
+              packetDecoded.push(ESC);
+              i++;
+            } else if (dataToCheck[i] == ESC && dataToCheck[i + 1] == ESC_SOP) {
+              packetDecoded.push(SOP);
+              i++;
+            } else if (dataToCheck[i] == ESC && dataToCheck[i + 1] == ESC_EOP) {
+              packetDecoded.push(EOP);
+              i++;
+            } else {
+              packetDecoded.push(dataToCheck[i])
+            }
+          }
+
+          let x = Buffer.from(packetDecoded.slice(5, 9)).readFloatBE(0);
+          let y = Buffer.from(packetDecoded.slice(9, 13)).readFloatBE(0);
+          let z = Buffer.from(packetDecoded.slice(13, 17)).readFloatBE(0);
+          this.emit('accelerometer', x, y, z);
+        }
+      }
+    });
   }
 
   _writePacket(characteristic, buff, waitForNotification = false, timeout = 0) {
@@ -90,6 +148,14 @@ class R2D2 extends Droid {
         }, timeout);
       }
 
+      let isActionResponse = (data) => {
+        let valid = false;
+        valid |= data.slice(0, 2).every((v) => [0x8D, 0x09].indexOf(v) >= 0);
+        valid |= data.slice(0, 2).every((v) => [0x8D, 0x08].indexOf(v) >= 0);
+        valid |= data.slice(0, 3).every((v) => [0x8D, 0x00, 0x17].indexOf(v) >= 0);
+        return valid;
+      }
+
       let listenerForRead = (data, isNotification) => {
         dataRead.push(...data)
         eopPosition = dataRead.indexOf(EOP);
@@ -101,15 +167,17 @@ class R2D2 extends Droid {
         }
         if (eopPosition !== -1) {
           // Check Package and Wait
-          if (waitForNotification) {
-            if (dataToCheck[1] % 2 == 0) {
-              finish();
+          if (isActionResponse(dataToCheck)) {
+            if (waitForNotification) {
+              if (dataToCheck[1] % 2 == 0) {
+                finish();
+              } else {
+                checkIsAValidRequest(dataToCheck);
+              }
             } else {
               checkIsAValidRequest(dataToCheck);
+              finish();
             }
-          } else {
-            checkIsAValidRequest(dataToCheck);
-            finish();
           }
         }
       };
@@ -126,16 +194,6 @@ class R2D2 extends Droid {
       wait,
       timeout
     );
-  }
-
-  _convertDegreesToHex(degree, format = CONVERSIONS.INTEGER) {
-    var view = new DataView(new ArrayBuffer(4));
-    format === CONVERSIONS.FLOAT ? view.setFloat32(0, degree) : view.setUint16(0, degree)
-    return Array
-      .apply(null, {
-        length: format === CONVERSIONS.FLOAT ? 4 : 2
-      })
-      .map((_, i) => view.getUint8(i))
   }
 
   connect() {
@@ -160,6 +218,7 @@ class R2D2 extends Droid {
                       true,
                       5000
                     ).then(() => {
+                      this._enableAccelerometerInspection(this._specialChar);
                       resolve(true);
                     }).catch(err => console.log(err))
                   });
@@ -181,17 +240,34 @@ class R2D2 extends Droid {
     );
   }
 
-  move(speed, heading = 0, direction, time = 0) {
+  async move(speed, heading, time, direction = 0x00) {
+    this._heading = heading;
+    let stop = false;
+    setTimeout(() => {
+      stop = true;
+    }, time)
+    while (!stop) {
+      await this._writePacket(
+        this._specialChar,
+        this._buildPacket(
+          MSG_MOVE, [speed, ...this._convertDegreesToHex(heading), direction]
+        )
+      );
+    }
+  }
+
+  stop() {
     return this._writePacket(
       this._specialChar,
-      this.buildPacket(
-        MSG_MOVE, [speed, ...convertIntDegreeToHex(heading), direction]
+      this._buildPacket(
+        MSG_MOVE, [0x00, ...this._convertDegreesToHex(this._heading), 0x00]
       )
     );
   }
 
   heading(heading) {
-    this.move(0x00, heading, 0x00, 0);
+    this._heading = heading;
+    this.move(0x00, heading, 0, 0x00);
   }
 
   rotateTop(degrees) {
