@@ -37,6 +37,14 @@ class R2D2 extends Droid {
     this._heading = 0;
   }
 
+  static get FORWARD() {
+    return 0x00;
+  }
+
+  static get BACKWARD() {
+    return 0x01;
+  }
+
   _encodePacketBody(payload) {
     let packetEncoded = [];
     for (let i = 0; i < payload.length; i++) {
