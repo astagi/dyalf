@@ -40,6 +40,8 @@ main();
 
 ## Troubleshooting
 
+Use @abandonware/noble npm package to avoid the xpc-connection error.
+
 #### MacOS won't connect to the droid
 
 Restart your Mac is a valid option! Alternatively:
