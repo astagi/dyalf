@@ -213,7 +213,7 @@ class R2D2 extends Droid {
               this._connectChar = characteristics[0];
               this._connectChar.write(Buffer.from(MSG_CONNECTION), true, (error) => {
                 peripheral.discoverServices([SPECIAL_SERVICE], (error, services) => {
-                  services[0].discoverCharacteristics([SPECIAL_CHAR], (error, characteristics) => {
+                  services[1].discoverCharacteristics([SPECIAL_CHAR], (error, characteristics) => {
                     this._specialChar = characteristics[0];
                     this._specialChar.subscribe(error => {
                       if (error) {
