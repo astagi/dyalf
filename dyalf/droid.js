@@ -1,5 +1,5 @@
 "use strict";
-const noble = require('noble');
+const noble = require('@abandonware/noble');
 const EventEmitter = require('events');
 
 
